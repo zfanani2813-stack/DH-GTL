@@ -1,0 +1,292 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Daftar Hadir GTL</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap');
+        body { 
+            font-family: 'Inter', sans-serif; 
+            background-color: #f1f5f9;
+        }
+        .status-select {
+            -webkit-appearance: none;
+            -moz-appearance: none;
+            appearance: none;
+            transition: all 0.2s ease;
+            text-align: center;
+        }
+        /* Tema Warna Status */
+        .select-hadir { border-color: #059669; color: #ffffff; background-color: #10b981; }
+        .select-telat { border-color: #d97706; color: #ffffff; background-color: #f59e0b; }
+        .select-izin { border-color: #2563eb; color: #ffffff; background-color: #3b82f6; }
+        .select-sakit { border-color: #7c3aed; color: #ffffff; background-color: #8b5cf6; }
+        .select-alpa { border-color: #dc2626; color: #ffffff; background-color: #ef4444; }
+        
+        #toast {
+            visibility: hidden;
+            min-width: 280px;
+            margin-left: -140px;
+            color: #fff;
+            text-align: center;
+            border-radius: 16px;
+            padding: 16px;
+            position: fixed;
+            z-index: 100;
+            left: 50%;
+            bottom: 120px;
+            opacity: 0;
+            transform: translateY(20px);
+            transition: all 0.3s ease;
+        }
+        #toast.show {
+            visibility: visible;
+            opacity: 1;
+            transform: translateY(0);
+        }
+    </style>
+</head>
+<body class="pb-44">
+
+    <div id="toast"></div>
+
+    <!-- Header -->
+    <div id="app-header" class="bg-white border-b border-gray-300 sticky top-0 z-20 shadow-sm">
+        <div class="max-w-2xl mx-auto px-4 py-4 flex flex-col space-y-3">
+            <div class="flex items-start justify-between">
+                <div class="flex-grow">
+                    <h1 class="text-lg md:text-xl font-bold text-gray-800 leading-tight">Daftar Hadir GTL</h1>
+                    <p class="text-xs font-semibold text-blue-700">Guru: Zaenul Fanani, S.Pd</p>
+                </div>
+                <div class="flex flex-col items-end space-y-1">
+                    <label class="text-[10px] font-bold text-gray-500 uppercase tracking-wider">Pilih Kelas</label>
+                    <select id="class-selector" onchange="changeClass()" 
+                        class="bg-gray-800 text-white text-xs font-bold px-3 py-1.5 rounded-lg border border-gray-700 outline-none cursor-pointer focus:ring-2 focus:ring-blue-500 transition-all">
+                        <option value="X TK 1">X TK 1</option>
+                        <option value="X TK 2">X TK 2</option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="flex items-center justify-between pt-1">
+                <div class="bg-gray-100 rounded-lg px-3 py-1.5 flex items-center border border-gray-200 shadow-inner">
+                    <svg class="w-3.5 h-3.5 text-gray-500 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2-2v12a2 2 0 002 2z"></path>
+                    </svg>
+                    <input type="date" id="attendance-date" class="bg-transparent text-xs text-gray-700 font-bold outline-none">
+                </div>
+                <div class="flex items-center space-x-2">
+                    <span id="class-badge" class="text-[10px] font-black bg-blue-100 text-blue-700 px-2 py-1 rounded-md border border-blue-200 uppercase">X TK 1</span>
+                    <span id="student-count" class="text-[10px] font-black bg-gray-100 text-gray-600 px-2 py-1 rounded-md border border-gray-200 uppercase">0 SISWA</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Area Tabel -->
+    <div class="max-w-2xl mx-auto p-4">
+        <form id="attendanceForm">
+            <div class="bg-white rounded-3xl shadow-lg border border-gray-300 overflow-hidden">
+                <table class="w-full text-left">
+                    <thead class="bg-gray-800 border-b border-gray-700 text-white">
+                        <tr>
+                            <th class="px-5 py-4 text-xs font-bold uppercase tracking-wider">Nama Siswa</th>
+                            <th class="px-5 py-4 text-xs font-bold uppercase tracking-wider text-right w-36">Status</th>
+                        </tr>
+                    </thead>
+                    <tbody id="studentContainer" class="divide-y divide-gray-200"></tbody>
+                </table>
+            </div>
+        </form>
+    </div>
+
+    <!-- Tombol Aksi Bawah -->
+    <div class="fixed bottom-0 left-0 right-0 p-4 bg-white/90 backdrop-blur-md border-t border-gray-300 z-30">
+        <div class="max-w-2xl mx-auto space-y-3">
+            <div class="flex space-x-2">
+                <!-- Tombol WhatsApp -->
+                <button onclick="shareToWhatsApp()" 
+                    class="flex-1 bg-[#25D366] hover:bg-[#128C7E] text-white font-bold py-4 rounded-2xl shadow-lg transition-all active:scale-[0.95] flex items-center justify-center space-x-2">
+                    <svg class="w-5 h-5 fill-current" viewBox="0 0 24 24">
+                        <path d="M.057 24l1.687-6.163c-1.041-1.804-1.588-3.849-1.587-5.946.003-6.556 5.338-11.891 11.893-11.891 3.181.001 6.167 1.24 8.413 3.488 2.246 2.248 3.484 5.232 3.484 8.412-.003 6.557-5.338 11.892-11.893 11.892-1.997-.001-3.951-.5-5.688-1.448l-6.309 1.656zm6.29-4.464c1.563.925 3.125 1.411 4.839 1.411 5.384 0 9.762-4.377 9.764-9.762 0-2.612-1.015-5.068-2.86-6.913-1.844-1.844-4.3-2.858-6.912-2.858-5.385 0-9.763 4.377-9.765 9.762-.001 1.83.49 3.568 1.42 5.146l-.974 3.556 3.648-.956zm11.233-6.57c-.312-.156-1.848-.912-2.14-.1.018-.285-.156-.423-.156s-1.09-.342-1.246-.342c-.156 0-.26.078-.364.234-.104.156-.403.507-.494.611-.091.104-.182.117-.494-.039-.312-.156-1.316-.484-2.507-1.548-.926-.827-1.551-1.849-1.733-2.16-.182-.312-.019-.481.136-.635.141-.138.312-.364.468-.546.156-.182.208-.312.312-.52.104-.208.052-.39-.026-.546-.078-.156-.702-1.69-.962-2.314-.253-.607-.512-.525-.702-.535-.182-.01-.39-.012-.598-.012s-.546.078-.832.39c-.286.312-1.092 1.066-1.092 2.6s1.118 3.016 1.274 3.224c.156.208 2.199 3.357 5.327 4.706.744.321 1.324.512 1.777.656.747.237 1.427.203 1.965.123.6-.089 1.848-.754 2.108-1.482.26-.728.26-1.352.182-1.482-.078-.13-.286-.208-.598-.364z"/>
+                    </svg>
+                    <span class="text-sm">Salin Rekap WA</span>
+                </button>
+            </div>
+
+            <!-- Tombol Kirim Sheet -->
+            <button type="submit" form="attendanceForm" id="submitBtn"
+                class="w-full bg-blue-700 hover:bg-blue-800 text-white font-bold py-4 rounded-2xl shadow-xl transition-all active:scale-[0.95] flex items-center justify-center">
+                <svg id="loader" class="animate-spin -ml-1 mr-3 h-5 w-5 text-white hidden" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                    <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                    <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                </svg>
+                <span id="btnText">Simpan ke Google Sheets</span>
+            </button>
+        </div>
+    </div>
+
+    <script>
+        const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbzYIRSlJZZurrYFhhAdlvLaF2cYoMpT7OED-Vrw2qmsGVZik3bKARcKee1k7GAymN3xzw/exec'; 
+
+        const databaseSiswa = {
+            "X TK 1": [
+                "ABDUL AZIZ", "AHMAD SABUDIN", "ANDIKA SANTURI", "BAYU ANDIKA", "FAIRUZZAINI", "FARIZAL HIKAM", "FIRZA WANANDA", "HAEKAL AZMI", "HASAN BASRI", "HERMA RAHMA YULIANDA", "LALU ADE DWI ANGGIAN", "LALU PANJI WIJAYA SAPUTRA", "M. ERWIN", "MARZUKI ALI", "MOH. HAETAMI", "MUHAMAD FIKRI AL ISLAMI", "MUHAMMAD ADITYA JUNIAR", "MUHAMMAD REZA", "PAESAL AZIZ", "RISWAN EFENDI", "SANDI IRAWAN", "TAMHIZ", "ZIHANDI ALAN ARZAKI", "RIO FERDINAN"
+            ],
+            "X TK 2": [
+                "ABDUL MUHTI", "ALDY", "ARIP HIDAYATULLAH", "DIKI WAHYUDI", "FANDI IRAWAN", "FERY FIRMANSYAH", "GEDE AGUS PRAMASETYA", "HAEKAL RAMDHAN", "HENDRA KURNIAWAN", "IBNU WATHAN", "LALU DENY HARIADI", "LALU RADITYA RONI SAPUTRA", "MAHENDRA IRAWAN", "MAULANA IQBAL", "MUH. ALFIN PRATAMA", "MUH. RAFFA KHOIRUL AZZAM", "MUHAMAT SALEH", "MUHAMMAD HADRIAN", "MUHAMMAD SYAHRUL TANZIL", "RAMA RAMDANI", "RIZKI PRATAMA", "SUHERMAN", "ZADIL RUZAHAN", "M. RICKI IQBAL", "AZAN SAPUTRA"
+            ]
+        };
+
+        const container = document.getElementById('studentContainer');
+        const classSelector = document.getElementById('class-selector');
+        const classBadge = document.getElementById('class-badge');
+        const studentCountLabel = document.getElementById('student-count');
+        const datePicker = document.getElementById('attendance-date');
+        const toast = document.getElementById('toast');
+        const form = document.getElementById('attendanceForm');
+        const btn = document.getElementById('submitBtn');
+        const loader = document.getElementById('loader');
+
+        datePicker.value = new Date().toISOString().split('T')[0];
+
+        function changeClass() {
+            const selectedClass = classSelector.value;
+            classBadge.innerText = selectedClass;
+            renderStudents(selectedClass);
+        }
+
+        function renderStudents(namaKelas) {
+            const siswa = databaseSiswa[namaKelas];
+            studentCountLabel.innerText = `${siswa ? siswa.length : 0} SISWA`;
+            
+            container.innerHTML = siswa.map((nama, index) => {
+                const stripeClass = (index % 2 === 0) ? 'bg-white' : 'bg-slate-50';
+                return `
+                <tr class="${stripeClass} hover:bg-blue-50 transition-colors">
+                    <td class="px-5 py-4 border-r border-gray-100">
+                        <p class="text-sm font-bold text-gray-800">${nama}</p>
+                    </td>
+                    <td class="px-5 py-4 text-right">
+                        <select name="status_${index}" data-nama="${nama}" onchange="updateStyle(this)"
+                            class="status-select select-hadir border-2 text-[12px] md:text-sm font-black rounded-xl p-2.5 outline-none w-full max-w-[130px]">
+                            <option value="Hadir">HADIR</option>
+                            <option value="Hadir Telat">TELAT</option>
+                            <option value="Izin">IZIN</option>
+                            <option value="Sakit">SAKIT</option>
+                            <option value="Alpa">ALPA</option>
+                        </select>
+                    </td>
+                </tr>`;
+            }).join('');
+        }
+
+        function updateStyle(select) {
+            select.classList.remove('select-hadir', 'select-telat', 'select-izin', 'select-sakit', 'select-alpa');
+            const val = select.value;
+            if (val === 'Hadir') select.classList.add('select-hadir');
+            else if (val === 'Hadir Telat') select.classList.add('select-telat');
+            else if (val === 'Izin') select.classList.add('select-izin');
+            else if (val === 'Sakit') select.classList.add('select-sakit');
+            else if (val === 'Alpa') select.classList.add('select-alpa');
+        }
+
+        function showToast(message, type = 'success') {
+            toast.innerText = message;
+            toast.style.backgroundColor = (type === 'success') ? '#10b981' : '#ef4444';
+            toast.classList.add('show');
+            setTimeout(() => toast.classList.remove('show'), 4000);
+        }
+
+        function shareToWhatsApp() {
+            const selectedClass = classSelector.value;
+            const tanggal = datePicker.value;
+            const selects = form.querySelectorAll('select[name^="status_"]');
+            
+            let text = `*REKAP PRESENSI HARIAN*\n`;
+            text += `------------------------------\n`;
+            text += `📅 Tanggal: ${tanggal}\n`;
+            text += `🏫 Kelas: ${selectedClass}\n`;
+            text += `------------------------------\n\n`;
+
+            const stats = { Hadir: 0, "Hadir Telat": 0, Izin: 0, Sakit: 0, Alpa: 0 };
+            
+            Array.from(selects).forEach((sel, i) => {
+                const nama = sel.getAttribute('data-nama');
+                const status = sel.value;
+                stats[status]++;
+                
+                let icon = "✅";
+                if(status === "Hadir Telat") icon = "⏳";
+                if(status === "Izin") icon = "✉️";
+                if(status === "Sakit") icon = "🤒";
+                if(status === "Alpa") icon = "❌";
+
+                text += `${i+1}. ${nama} [${icon} ${status}]\n`;
+            });
+
+            text += `\n------------------------------\n`;
+            text += `*Ringkasan:*\n`;
+            text += `✅ Hadir: ${stats.Hadir}\n`;
+            text += `⏳ Telat: ${stats["Hadir Telat"]}\n`;
+            text += `✉️ Izin: ${stats.Izin}\n`;
+            text += `🤒 Sakit: ${stats.Sakit}\n`;
+            text += `❌ Alpa: ${stats.Alpa}\n`;
+            text += `------------------------------\n`;
+            text += `_Dikirim via Aplikasi Presensi GTL_`;
+
+            // Salin ke clipboard
+            const el = document.createElement('textarea');
+            el.value = text;
+            document.body.appendChild(el);
+            el.select();
+            document.execCommand('copy');
+            document.body.removeChild(el);
+
+            showToast('✅ Teks Rekap Berhasil Disalin!', 'success');
+            
+            // Redirect ke WhatsApp
+            setTimeout(() => {
+                const waUrl = `https://api.whatsapp.com/send?text=${encodeURIComponent(text)}`;
+                window.open(waUrl, '_blank');
+            }, 1000);
+        }
+
+        form.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            btn.disabled = true;
+            loader.classList.remove('hidden');
+            
+            const selectedClass = classSelector.value;
+            const selects = form.querySelectorAll('select[name^="status_"]');
+            
+            const payload = Array.from(selects).map(sel => ({
+                tanggal: datePicker.value,
+                nama: sel.getAttribute('data-nama'),
+                status: sel.value,
+                kelas: selectedClass 
+            }));
+
+            try {
+                const response = await fetch(SCRIPT_URL, {
+                    method: 'POST',
+                    body: JSON.stringify(payload)
+                });
+                const result = await response.json();
+                if (result.result === "success") {
+                    showToast(`✅ Data ${selectedClass} Berhasil Terkirim!`, 'success');
+                } else { throw new Error(); }
+            } catch (error) {
+                showToast('❌ Gagal Mengirim. Periksa Sheet URL.', 'error');
+            } finally {
+                btn.disabled = false;
+                loader.classList.add('hidden');
+            }
+        });
+
+        changeClass();
+    </script>
+</body>
+</html>
